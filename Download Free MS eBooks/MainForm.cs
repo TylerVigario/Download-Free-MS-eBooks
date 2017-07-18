@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Net;
+using System.IO;
 
 namespace Download_Free_MS_eBooks
 {
@@ -12,6 +13,7 @@ namespace Download_Free_MS_eBooks
         private List<Download> downloads;
         private WebClient wClient;
         private string downloadLocation;
+        private bool logYet = false;
 
         public MainForm()
         {
@@ -28,6 +30,10 @@ namespace Download_Free_MS_eBooks
             wClient = new WebClient();
             //
             urls = downloadBookList();
+            if (urls == null)
+            {
+                return;
+            }
             //
             objectListView1.SetObjects(urls);
         }
@@ -53,15 +59,15 @@ namespace Download_Free_MS_eBooks
             {
                 if (!String.IsNullOrEmpty(line) && line.Trim() != "MSFT eBooks")
                 {
+                    string[] parts = line.Split(',');
+                    //
                     try
                     {
-                        string[] parts = line.Split(',');
                         urls.Add(new Download(new Uri(parts[0].Trim()), parts[1].Trim()));
                     }
-                    catch(UriFormatException ex)
+                    catch (UriFormatException)
                     {
-                        // Send error maybe
-                        // Log it for sure
+                        LogLostFile(parts[0]);
                     }
                 }
             }
@@ -84,19 +90,56 @@ namespace Download_Free_MS_eBooks
             }
             //
             toolStripProgressBar1.Maximum = downloads.Count;
-            //
             wClient.DownloadFileCompleted += WClient_DownloadFileCompleted;
             toolStripStatusLabel1.Text = "Downloading " + downloads[0].Name;
-            wClient.DownloadFileAsync(downloads[0].URL, downloadLocation + "\\" + downloads[0].Name);
+            //
+            try
+            {
+                wClient.DownloadFileAsync(downloads[0].URL, downloadLocation + "\\" + downloads[0].Name);
+            }
+            catch(WebException)
+            {
+                LogLostFile(downloads[0].URL.ToString());
+            }
+            //
             downloads.Remove(downloads[0]);
         }
 
         private void WClient_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
-            toolStripStatusLabel1.Text = "Downloading " + downloads[0].Name;
-            wClient.DownloadFileAsync(downloads[0].URL, downloadLocation + "\\" + downloads[0].Name);
-            downloads.Remove(downloads[0]);
             toolStripProgressBar1.PerformStep();
+            //
+            if (downloads.Count > 0)
+            {
+                toolStripStatusLabel1.Text = "Downloading " + downloads[0].Name;
+                //
+                try
+                {
+                    wClient.DownloadFileAsync(downloads[0].URL, downloadLocation + "\\" + downloads[0].Name);
+                }
+                catch (WebException)
+                {
+                    LogLostFile(downloads[0].URL.ToString());
+                }
+                //
+                downloads.Remove(downloads[0]);
+            }
+            else
+            {
+                MessageBox.Show("Finished downloading");
+            }
+        }
+
+        private void LogLostFile(string report)
+        {
+            if (!logYet)
+            {
+                LogLostFile(" ======== Download Free MS eBooks v1.1 ========");
+                LogLostFile(" == " + DateTime.Now.ToString());
+                logYet = true;
+            }
+            //
+            File.AppendAllText(Application.StartupPath + "\\errors.log", report + Environment.NewLine);
         }
     }
 
