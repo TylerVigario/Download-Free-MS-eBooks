@@ -134,8 +134,8 @@ namespace Download_Free_MS_eBooks
         {
             if (!logYet)
             {
-                LogLostFile(" ======== Download Free MS eBooks v1.1 ========");
-                LogLostFile(" == " + DateTime.Now.ToString());
+                File.AppendAllText(Application.StartupPath + "\\errors.log", " ======== Download Free MS eBooks v1.1 ========" + Environment.NewLine);
+                File.AppendAllText(Application.StartupPath + "\\errors.log", " == " + DateTime.Now.ToString() + Environment.NewLine);
                 logYet = true;
             }
             //
