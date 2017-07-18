@@ -126,6 +126,7 @@ namespace Download_Free_MS_eBooks
             }
             else
             {
+                toolStripStatusLabel1.Text = "Finished";
                 MessageBox.Show("Finished downloading");
             }
         }
