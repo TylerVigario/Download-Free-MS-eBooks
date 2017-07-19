@@ -28,32 +28,23 @@ namespace Download_Free_MS_eBooks
         private void MainForm_Load(object sender, EventArgs e)
         {
             wClient = new WebClient();
-            //
-            urls = downloadBookList();
-            if (urls == null)
-            {
-                return;
-            }
-            //
-            objectListView1.SetObjects(urls);
-        }
-
-        private List<Download> downloadBookList()
-        {
-            string temp;
+            wClient.DownloadStringCompleted += WClient_DownloadStringCompleted;
             //
             try
             {
-                temp = wClient.DownloadString("https://drive.google.com/uc?export=download&id=0B-ULAF28Y63jY00wZEtWSmRTUWM");
+                wClient.DownloadStringAsync(new Uri("https://drive.google.com/uc?export=download&id=0B-ULAF28Y63jY00wZEtWSmRTUWM"));
             }
             catch (WebException)
             {
                 MessageBox.Show("File list URL is down. Look for update from developer of this software.");
-                return null;
+                return;
             }
-            //
-            string[] lines = temp.Split(new string[] { "\r\n", "\t\t" }, StringSplitOptions.None);
-            List<Download> urls = new List<Download>();
+        }
+
+        private void WClient_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            string[] lines = e.Result.Split(new string[] { "\r\n", "\t\t" }, StringSplitOptions.None);
+            urls = new List<Download>();
             //
             foreach (string line in lines)
             {
@@ -67,12 +58,13 @@ namespace Download_Free_MS_eBooks
                     }
                     catch (UriFormatException)
                     {
+                        toolStripStatusLabel1.Text = "Invalid URL: " + parts[0];
                         LogLostFile(parts[0]);
                     }
                 }
             }
             //
-            return urls;
+            objectListView1.SetObjects(urls);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -99,6 +91,7 @@ namespace Download_Free_MS_eBooks
             }
             catch(WebException)
             {
+                toolStripStatusLabel1.Text = "Error downloading: " + downloads[0].Name;
                 LogLostFile(downloads[0].URL.ToString());
             }
             //
@@ -107,6 +100,12 @@ namespace Download_Free_MS_eBooks
 
         private void WClient_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
+            if (e.Error != null)
+            {
+                toolStripStatusLabel1.Text = "Error downloading: " + downloads[0].Name;
+                LogLostFile(downloads[0].URL.ToString());
+            }
+            //
             toolStripProgressBar1.PerformStep();
             //
             if (downloads.Count > 0)
@@ -119,6 +118,7 @@ namespace Download_Free_MS_eBooks
                 }
                 catch (WebException)
                 {
+                    toolStripStatusLabel1.Text = "Error downloading: " + downloads[0].Name;
                     LogLostFile(downloads[0].URL.ToString());
                 }
                 //
@@ -135,8 +135,10 @@ namespace Download_Free_MS_eBooks
         {
             if (!logYet)
             {
-                File.AppendAllText(Application.StartupPath + "\\errors.log", " ======== Download Free MS eBooks v1.1 ========" + Environment.NewLine);
-                File.AppendAllText(Application.StartupPath + "\\errors.log", " == " + DateTime.Now.ToString() + Environment.NewLine);
+                File.AppendAllText(Application.StartupPath + "\\errors.log", "===========================================================" + Environment.NewLine);
+                File.AppendAllText(Application.StartupPath + "\\errors.log", " ======== Download Free MS eBooks v" + Application.ProductVersion + " ========" + Environment.NewLine);
+                File.AppendAllText(Application.StartupPath + "\\errors.log", " ======== " + DateTime.Now.ToString() + " ========" + Environment.NewLine);
+                File.AppendAllText(Application.StartupPath + "\\errors.log", "===========================================================" + Environment.NewLine);
                 logYet = true;
             }
             //
