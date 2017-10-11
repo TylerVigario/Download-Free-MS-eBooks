@@ -89,9 +89,9 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(664, 329);
+            this.button1.Location = new System.Drawing.Point(655, 329);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(84, 23);
             this.button1.TabIndex = 1;
             this.button1.Text = "Download";
             this.button1.UseVisualStyleBackColor = true;
@@ -131,6 +131,7 @@
             this.Name = "MainForm";
             this.ShowIcon = false;
             this.Text = "We all love learning!";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.objectListView1)).EndInit();
             this.statusStrip1.ResumeLayout(false);
